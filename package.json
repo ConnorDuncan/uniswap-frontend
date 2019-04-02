@@ -37,11 +37,16 @@
     "web3": "^1.0.0-beta.36"
   },
   "scripts": {
+    "prettify": "kathari prettify",
+    "lint:scss": "kathari lint:scss",
+    "lint:js": "kathari lint:js --no-root",
+    "lint": "yarn run lint:scss && yarn run lint:js",
+    "test": "react-scripts test --env=jsdom",
+    "cz": "kathari cz",
     "start": "react-scripts start",
     "start:kovan": "REACT_APP_NETWORK_ID=42 REACT_APP_NETWORK='Kovan Test Network' react-scripts start",
     "build": "react-scripts build && cp build/index.html build/404.html",
     "build:kovan": "REACT_APP_NETWORK_ID=42 REACT_APP_NETWORK='Kovan Test Network' react-scripts build && cp build/index.html build/404.html",
-    "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "deploy": "npm run build&&gh-pages -d build"
   },

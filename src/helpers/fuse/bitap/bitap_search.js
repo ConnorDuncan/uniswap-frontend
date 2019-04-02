@@ -1,7 +1,18 @@
-import bitapScore from './bitap_score';
-import matchedIndices from './bitap_matched_indices';
+import bitapScore from './bitap_score'
+import matchedIndices from './bitap_matched_indices'
 
-export default function (text, pattern, patternAlphabet, { location = 0, distance = 100, threshold = 0.6, findAllMatches = false, minMatchCharLength = 1 }) {
+export default function(
+  text,
+  pattern,
+  patternAlphabet,
+  {
+    location = 0,
+    distance = 100,
+    threshold = 0.6,
+    findAllMatches = false,
+    minMatchCharLength = 1
+  }
+) {
   const expectedLocation = location
   // Set starting location at beginning text and initialize the alphabet.
   const textLen = text.length
@@ -63,7 +74,7 @@ export default function (text, pattern, patternAlphabet, { location = 0, distanc
         currentLocation: expectedLocation + binMid,
         expectedLocation,
         distance
-      });
+      })
 
       if (score <= currentThreshold) {
         binMin = binMid
@@ -78,7 +89,9 @@ export default function (text, pattern, patternAlphabet, { location = 0, distanc
     binMax = binMid
 
     let start = Math.max(1, expectedLocation - binMid + 1)
-    let finish = findAllMatches ? textLen : Math.min(expectedLocation + binMid, textLen) + patternLen
+    let finish = findAllMatches
+      ? textLen
+      : Math.min(expectedLocation + binMid, textLen) + patternLen
 
     // Initialize the bit array
     let bitArr = Array(finish + 2)
@@ -98,7 +111,8 @@ export default function (text, pattern, patternAlphabet, { location = 0, distanc
 
       // Subsequent passes: fuzzy match
       if (i !== 0) {
-        bitArr[j] |= (((lastBitArr[j + 1] | lastBitArr[j]) << 1) | 1) | lastBitArr[j + 1]
+        bitArr[j] |=
+          ((lastBitArr[j + 1] | lastBitArr[j]) << 1) | 1 | lastBitArr[j + 1]
       }
 
       if (bitArr[j] & mask) {

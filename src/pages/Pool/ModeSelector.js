@@ -1,44 +1,44 @@
-import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
-import { withNamespaces } from 'react-i18next';
-import OversizedPanel from "../../components/OversizedPanel";
-import Dropdown from "../../assets/images/dropdown-blue.svg";
-import Modal from "../../components/Modal";
-import {CSSTransitionGroup} from "react-transition-group";
+import React, { Component } from 'react'
+import { withRouter } from 'react-router-dom'
+import { withNamespaces } from 'react-i18next'
+import OversizedPanel from '../../components/OversizedPanel'
+import Dropdown from '../../assets/images/dropdown-blue.svg'
+import Modal from '../../components/Modal'
+import { CSSTransitionGroup } from 'react-transition-group'
 
-const ADD = 'Add Liquidity';
-const REMOVE = 'Remove Liquidity';
-const CREATE = 'Create Exchange';
+const ADD = 'Add Liquidity'
+const REMOVE = 'Remove Liquidity'
+const CREATE = 'Create Exchange'
 
 class ModeSelector extends Component {
   state = {
     isShowingModal: false,
-    selected: ADD,
-  };
+    selected: ADD
+  }
 
   changeView(view) {
-    const { history } = this.props;
+    const { history } = this.props
 
     this.setState({
       isShowingModal: false,
-      selected: view,
-    });
+      selected: view
+    })
 
     switch (view) {
       case ADD:
-        return history.push('/add-liquidity');
+        return history.push('/add-liquidity')
       case REMOVE:
-        return history.push('/remove-liquidity');
+        return history.push('/remove-liquidity')
       case CREATE:
-        return history.push('/create-exchange');
+        return history.push('/create-exchange')
       default:
-        return;
+        return
     }
   }
 
   renderModal() {
     if (!this.state.isShowingModal) {
-      return;
+      return
     }
 
     return (
@@ -56,24 +56,24 @@ class ModeSelector extends Component {
               className="pool-modal__item"
               onClick={() => this.changeView(ADD)}
             >
-              {this.props.t("addLiquidity")}
+              {this.props.t('addLiquidity')}
             </div>
             <div
               className="pool-modal__item"
               onClick={() => this.changeView(REMOVE)}
             >
-              {this.props.t("removeLiquidity")}
+              {this.props.t('removeLiquidity')}
             </div>
             <div
               className="pool-modal__item"
               onClick={() => this.changeView(CREATE)}
             >
-              {this.props.t("createExchange")}
+              {this.props.t('createExchange')}
             </div>
           </div>
         </CSSTransitionGroup>
       </Modal>
-    );
+    )
   }
 
   render() {
@@ -83,9 +83,7 @@ class ModeSelector extends Component {
           className="pool__liquidity-container"
           onClick={() => this.setState({ isShowingModal: true })}
         >
-          <span className="pool__liquidity-label">
-            {this.props.title}
-          </span>
+          <span className="pool__liquidity-label">{this.props.title}</span>
           <img src={Dropdown} />
         </div>
         {this.renderModal()}
@@ -94,4 +92,4 @@ class ModeSelector extends Component {
   }
 }
 
-export default withRouter(withNamespaces()(ModeSelector));
+export default withRouter(withNamespaces()(ModeSelector))

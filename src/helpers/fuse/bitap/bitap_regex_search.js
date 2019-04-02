@@ -1,8 +1,10 @@
 // eslint-disable-next-line no-unused-escape
 const SPECIAL_CHARS_REGEX = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 
-export default function (text, pattern, tokenSeparator = / +/g) {
-  let regex = new RegExp(pattern.replace(SPECIAL_CHARS_REGEX, '\\$&').replace(tokenSeparator, '|'))
+export default function(text, pattern, tokenSeparator = / +/g) {
+  let regex = new RegExp(
+    pattern.replace(SPECIAL_CHARS_REGEX, '\\$&').replace(tokenSeparator, '|')
+  )
   let matches = text.match(regex)
   let isMatch = !!matches
   let matchedIndices = []
