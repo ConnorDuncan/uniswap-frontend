@@ -1,3 +1,5 @@
+import getT2CRTokens from '../helpers/get-t2cr-tokens'
+
 const KOVAN = {
   exchangeAddresses: {
     addresses: [],
@@ -50,23 +52,24 @@ export const addExchange = ({ exchangeAddress, label, tokenAddress }) => (
   })
 }
 
-export const setAddresses = networkId => {
+export const setAddresses = (web3, networkId) => async dispatch => {
+  const tokenAddresses = { addresses: await getT2CRTokens(web3, networkId) }
   switch (networkId) {
     // Main Net
     case 1:
     case '1':
-      return {
-        payload: MAIN,
+      return dispatch({
+        payload: { ...MAIN, tokenAddresses },
         type: SET_ADDRESSES
-      }
+      })
     // Kovan
-    case 4:
-    case '4':
+    case 42:
+    case '42':
     default:
-      return {
-        payload: KOVAN,
+      return dispatch({
+        payload: { ...KOVAN, tokenAddresses },
         type: SET_ADDRESSES
-      }
+      })
   }
 }
 

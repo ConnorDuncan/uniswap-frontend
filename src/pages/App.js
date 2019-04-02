@@ -32,7 +32,7 @@ class App extends Component {
 
     web3.eth.net.getId((err, networkId) => {
       if (!err && !this.hasSetNetworkId) {
-        setAddresses(networkId)
+        setAddresses(web3, networkId)
         this.hasSetNetworkId = true
       }
     })
@@ -77,7 +77,7 @@ export default connect(
     web3: state.web3connect.web3
   }),
   dispatch => ({
-    setAddresses: networkId => dispatch(setAddresses(networkId)),
+    setAddresses: (web3, networkId) => dispatch(setAddresses(web3, networkId)),
     initialize: () => dispatch(initialize()),
     startWatching: () => dispatch(startWatching())
   })
