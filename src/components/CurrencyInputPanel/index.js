@@ -91,12 +91,35 @@ class CurrencyInputPanel extends Component {
   }
 
   onTokenSelect = address => {
+    const {
+      addExchange,
+      exchangeAddresses: { fromToken },
+      factoryAddress,
+      onCurrencySelected,
+      tokenAddresses: { addresses },
+      web3
+    } = this.props
+
     this.setState({
-      searchQuery: '',
-      isShowingModal: false
+      searchQuery: ''
     })
 
-    this.props.onCurrencySelected(address)
+    if (!fromToken[address]) {
+      const label = addresses.find(a => a[1] === address)[0]
+      const factory = new web3.eth.Contract(FACTORY_ABI, factoryAddress)
+      this.setState({ loadingExchange: true })
+      factory.methods.getExchange(address).call((err, data) => {
+        if (!err && data !== '0x0000000000000000000000000000000000000000') {
+          addExchange({ exchangeAddress: data, label, tokenAddress: address })
+          onCurrencySelected(address)
+        }
+
+        this.setState({ isShowingModal: false, loadingExchange: false })
+      })
+    } else {
+      onCurrencySelected(address)
+      this.setState({ isShowingModal: false })
+    }
   }
 
   renderTokenList() {
@@ -115,11 +138,11 @@ class CurrencyInputPanel extends Component {
       history
     } = this.props
 
-    if (loadingExchange) {
+    if (loadingExchange || tokens.length === 1) {
       return (
         <div className="token-modal__token-row token-modal__token-row--searching">
           <div className="loader" />
-          <div>Searching for Exchange...</div>
+          <div>Searching Exchanges...</div>
         </div>
       )
     }

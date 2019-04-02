@@ -35,11 +35,6 @@ export const addExchange = ({ exchangeAddress, label, tokenAddress }) => (
     addresses: { exchangeAddresses, tokenAddresses }
   } = getState()
 
-  if (
-    tokenAddresses.addresses.filter(([symbol]) => symbol === label).length > 0
-  )
-    return
-
   if (exchangeAddresses.fromToken[tokenAddresses]) return
 
   dispatch({
