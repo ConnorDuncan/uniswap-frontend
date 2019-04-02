@@ -95,6 +95,7 @@ class CurrencyInputPanel extends Component {
       addExchange,
       exchangeAddresses: { fromToken },
       factoryAddress,
+      history,
       onCurrencySelected,
       tokenAddresses: { addresses },
       web3
@@ -112,7 +113,7 @@ class CurrencyInputPanel extends Component {
         if (!err && data !== '0x0000000000000000000000000000000000000000') {
           addExchange({ exchangeAddress: data, label, tokenAddress: address })
           onCurrencySelected(address)
-        }
+        } else history.push(`/create-exchange/${address}`)
 
         this.setState({ isShowingModal: false, loadingExchange: false })
       })
