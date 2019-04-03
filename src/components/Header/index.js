@@ -81,7 +81,7 @@ function isMobile() {
 
 class BlockingWarning extends Component {
   render() {
-    const { t, isConnected, initialized, networkId } = this.props
+    const { t, isConnected, initialized, networkId, unlock } = this.props
     let content = []
 
     const correctNetworkId = process.env.REACT_APP_NETWORK_ID || 1
@@ -135,11 +135,21 @@ class BlockingWarning extends Component {
       ]
     }
 
+    if (unlock) {
+      content = [
+        <div key="warning-title">Ethereum wallet locked</div>,
+        <div key="warning-desc" className="header__dialog__description">
+          Please unlock it so that we can access your balances and swap your
+          tokens.
+        </div>
+      ]
+    }
+
     return (
       <div
         className={classnames('header__dialog', {
           'header__dialog--disconnected':
-            (!isConnected || wrongNetwork) && initialized
+            ((!isConnected || wrongNetwork) && initialized) || unlock
         })}
       >
         {content}
@@ -169,7 +179,12 @@ function Header(props) {
 
 Header.propTypes = {
   currentAddress: PropTypes.string,
-  isConnected: PropTypes.bool.isRequired
+  isConnected: PropTypes.bool.isRequired,
+  unlock: PropTypes.bool
+}
+
+Header.defaultProps = {
+  unlock: false
 }
 
 export default connect(state => ({

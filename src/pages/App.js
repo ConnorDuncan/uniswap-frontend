@@ -12,9 +12,12 @@ import Pool from './Pool'
 import './App.scss'
 
 class App extends Component {
+  state = { timedOut: false }
+
   componentWillMount() {
     const { initialize, startWatching } = this.props
     initialize().then(startWatching)
+    this.timeout = setTimeout(() => this.setState({ timedOut: true }), 1000)
   }
 
   componentWillUpdate() {
@@ -38,15 +41,19 @@ class App extends Component {
     })
   }
 
+  componentWillUnmount() {
+    clearTimeout(this.timeout)
+  }
+
   render() {
-    if (!this.props.initialized) {
+    if (!this.props.initialized && !this.state.timedOut) {
       return <noscript />
     }
 
     return (
       <div id="app-container">
         <MediaQuery query="(min-width: 768px)">
-          <Header />
+          <Header unlock={!this.props.initialized && this.state.timedOut} />
         </MediaQuery>
         <Web3Connect />
         <BrowserRouter>
