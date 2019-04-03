@@ -169,7 +169,27 @@ function Header(props) {
       >
         <Logo />
         <div className="header__center-group">
-          <span className="header__title">Uniswap</span>
+          <span className="header__title">Uniswap.Ninja</span>
+          <span className="header__title">
+            <a
+              className="header__link"
+              href="https://docs.uniswap.io"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Docs
+            </a>
+          </span>
+          <span className="header__title">
+            <a
+              className="header__link"
+              href="https://kleros.io"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Kleros Integration
+            </a>
+          </span>
         </div>
         <Web3Status isConnected />
       </div>
