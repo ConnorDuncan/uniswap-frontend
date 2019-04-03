@@ -99,7 +99,9 @@ const handleAddExchange = (state, { payload }) => {
     },
     tokenAddresses: {
       ...state.tokenAddresses,
-      addresses: [...state.tokenAddresses.addresses, [label, tokenAddress]]
+      addresses: state.tokenAddresses.addresses.some(a => a[1] === tokenAddress)
+        ? state.tokenAddresses.addresses
+        : [...state.tokenAddresses.addresses, [label, tokenAddress]]
     }
   }
 }

@@ -213,11 +213,56 @@ class Swap extends Component {
       decimals: outputDecimalsB
     } = selectors().getBalance(exchangeAddressB, outputCurrency)
 
+    const inputAmountAA = BN(2).multipliedBy(10 ** inputDecimalsA)
+    const outputAmountAA = calculateEtherTokenOutput({
+      inputAmount: inputAmountAA,
+      inputReserve: inputReserveA,
+      outputReserve: outputReserveA
+    })
+    // Redundant Variable for readability of the formala
+    // OutputAmount from the first swap becomes InputAmount of the second swap
+    const inputAmountBA = outputAmountAA
+    const outputAmountBA = calculateEtherTokenOutput({
+      inputAmount: inputAmountBA,
+      inputReserve: inputReserveB,
+      outputReserve: outputReserveB
+    })
+    const outputValueA = outputAmountBA
+      .dividedBy(BN(10 ** outputDecimalsB))
+      .toFixed(7)
+    const exchangeRateA = BN(outputValueA).dividedBy(BN(2))
+
+    const inputAmountAB = BN(1).multipliedBy(10 ** inputDecimalsA)
+    const outputAmountAB = calculateEtherTokenOutput({
+      inputAmount: inputAmountAB,
+      inputReserve: inputReserveA,
+      outputReserve: outputReserveA
+    })
+    // Redundant Variable for readability of the formala
+    // OutputAmount from the first swap becomes InputAmount of the second swap
+    const inputAmountBB = outputAmountAB
+    const outputAmountBB = calculateEtherTokenOutput({
+      inputAmount: inputAmountBB,
+      inputReserve: inputReserveB,
+      outputReserve: outputReserveB
+    })
+    const outputValueB = outputAmountBB
+      .dividedBy(BN(10 ** outputDecimalsB))
+      .toFixed(7)
+    const exchangeRateB = BN(outputValueB).dividedBy(BN(1))
+
+    const appendState = {
+      marginalPrice: BN(1)
+        .div(exchangeRateA)
+        .minus(BN(1).div(exchangeRateB))
+    }
+
     if (lastEditedField === INPUT) {
       if (!oldInputValue) {
         return this.setState({
-          outputValue: '',
-          exchangeRate: BN(0)
+          ...appendState,
+          exchangeRate: exchangeRateB,
+          outputValue: ''
         })
       }
 
@@ -241,8 +286,6 @@ class Swap extends Component {
         .toFixed(7)
       const exchangeRate = BN(outputValue).dividedBy(BN(oldInputValue))
 
-      const appendState = {}
-
       if (!exchangeRate.isEqualTo(BN(oldExchangeRate))) {
         appendState.exchangeRate = exchangeRate
       }
@@ -257,8 +300,9 @@ class Swap extends Component {
     if (lastEditedField === OUTPUT) {
       if (!oldOutputValue) {
         return this.setState({
-          inputValue: '',
-          exchangeRate: BN(0)
+          ...appendState,
+          exchangeRate: exchangeRateB,
+          inputValue: ''
         })
       }
 
@@ -285,8 +329,6 @@ class Swap extends Component {
         : inputAmountA.dividedBy(BN(10 ** inputDecimalsA)).toFixed(7)
       const exchangeRate = BN(oldOutputValue).dividedBy(BN(inputValue))
 
-      const appendState = {}
-
       if (!exchangeRate.isEqualTo(BN(oldExchangeRate))) {
         appendState.exchangeRate = exchangeRate
       }
@@ -300,7 +342,13 @@ class Swap extends Component {
       }
 
       this.setState(appendState)
-    }
+    } else
+      this.setState({
+        ...appendState,
+        exchangeRate: exchangeRateB,
+        inputValue: '',
+        outputValue: ''
+      })
   }
 
   recalcEthTokenForm = () => {
@@ -334,11 +382,40 @@ class Swap extends Component {
       decimals: outputDecimals
     } = selectors().getBalance(exchangeAddress, outputCurrency)
 
+    const inputAmountA = BN(2).multipliedBy(10 ** inputDecimals)
+    const outputAmountA = calculateEtherTokenOutput({
+      inputAmount: inputAmountA,
+      inputReserve,
+      outputReserve
+    })
+    const outputValueA = outputAmountA
+      .dividedBy(BN(10 ** outputDecimals))
+      .toFixed(7)
+    const exchangeRateA = BN(outputValueA).dividedBy(BN(2))
+
+    const inputAmountB = BN(1).multipliedBy(10 ** inputDecimals)
+    const outputAmountB = calculateEtherTokenOutput({
+      inputAmount: inputAmountB,
+      inputReserve,
+      outputReserve
+    })
+    const outputValueB = outputAmountB
+      .dividedBy(BN(10 ** outputDecimals))
+      .toFixed(7)
+    const exchangeRateB = BN(outputValueB).dividedBy(BN(1))
+
+    const appendState = {
+      marginalPrice: BN(1)
+        .div(exchangeRateA)
+        .minus(BN(1).div(exchangeRateB))
+    }
+
     if (lastEditedField === INPUT) {
       if (!oldInputValue) {
         return this.setState({
-          outputValue: '',
-          exchangeRate: BN(0)
+          ...appendState,
+          exchangeRate: exchangeRateB,
+          outputValue: ''
         })
       }
 
@@ -353,8 +430,6 @@ class Swap extends Component {
         .toFixed(7)
       const exchangeRate = BN(outputValue).dividedBy(BN(oldInputValue))
 
-      const appendState = {}
-
       if (!exchangeRate.isEqualTo(BN(oldExchangeRate))) {
         appendState.exchangeRate = exchangeRate
       }
@@ -367,8 +442,9 @@ class Swap extends Component {
     } else if (lastEditedField === OUTPUT) {
       if (!oldOutputValue) {
         return this.setState({
-          inputValue: '',
-          exchangeRate: BN(0)
+          ...appendState,
+          exchangeRate: exchangeRateB,
+          inputValue: ''
         })
       }
 
@@ -383,8 +459,6 @@ class Swap extends Component {
         : inputAmount.dividedBy(BN(10 ** inputDecimals)).toFixed(7)
       const exchangeRate = BN(oldOutputValue).dividedBy(BN(inputValue))
 
-      const appendState = {}
-
       if (!exchangeRate.isEqualTo(BN(oldExchangeRate))) {
         appendState.exchangeRate = exchangeRate
       }
@@ -394,7 +468,13 @@ class Swap extends Component {
       }
 
       this.setState(appendState)
-    }
+    } else
+      this.setState({
+        ...appendState,
+        exchangeRate: exchangeRateB,
+        inputValue: '',
+        outputValue: ''
+      })
   }
 
   updateInput = amount => {
@@ -765,7 +845,12 @@ class Swap extends Component {
 
   renderExchangeRate() {
     const { t, account, selectors } = this.props
-    const { exchangeRate, inputCurrency, outputCurrency } = this.state
+    const {
+      exchangeRate,
+      inputCurrency,
+      marginalPrice,
+      outputCurrency
+    } = this.state
     const { label: inputLabel } = selectors().getBalance(account, inputCurrency)
     const { label: outputLabel } = selectors().getBalance(
       account,
@@ -781,7 +866,11 @@ class Swap extends Component {
       return (
         <OversizedPanel hideBottom>
           <div className="swap__exchange-rate-wrapper">
-            <span className="swap__exchange-rate">{t('exchangeRate')}</span>
+            <span className="swap__exchange-rate">Price</span>
+            <span> - </span>
+          </div>
+          <div className="swap__exchange-rate-wrapper">
+            <span className="swap__exchange-rate">Marginal Price</span>
             <span> - </span>
           </div>
         </OversizedPanel>
@@ -791,9 +880,17 @@ class Swap extends Component {
     return (
       <OversizedPanel hideBottom>
         <div className="swap__exchange-rate-wrapper">
-          <span className="swap__exchange-rate">{t('exchangeRate')}</span>
+          <span className="swap__exchange-rate">Price</span>
           <span>
-            {`1 ${inputLabel} = ${exchangeRate.toFixed(7)} ${outputLabel}`}
+            {`1 ${outputLabel} = ${BN(1)
+              .div(exchangeRate)
+              .toFixed(7)} ${inputLabel}`}
+          </span>
+        </div>
+        <div className="swap__exchange-rate-wrapper">
+          <span className="swap__exchange-rate">Marginal Price</span>
+          <span>
+            {`1 ${outputLabel} = ${marginalPrice.toFixed(7)} ${inputLabel}`}
           </span>
         </div>
       </OversizedPanel>
