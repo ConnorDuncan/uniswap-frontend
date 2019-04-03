@@ -46,7 +46,7 @@ class NavigationTabs extends Component {
           {this.renderTab(t('swap'), '/swap', /swap/)}
           {this.renderTab(t('send'), '/send', /send/)}
           {this.renderTab(
-            t('pool'),
+            'Liquidity',
             '/add-liquidity',
             /add-liquidity|remove-liquidity|create-exchange/
           )}
