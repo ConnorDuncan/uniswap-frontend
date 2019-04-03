@@ -45,6 +45,7 @@ export default async (web3, networkID) => {
 
   return Object.keys(tokenData).map(address => [
     tokenData[address][0].ticker,
-    address
+    address,
+    tokenData[address][0].name
   ])
 }

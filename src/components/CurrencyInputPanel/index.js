@@ -27,7 +27,11 @@ const FUSE_OPTIONS = {
   distance: 100,
   maxPatternLength: 45,
   minMatchCharLength: 1,
-  keys: [{ name: 'address', weight: 0.8 }, { name: 'label', weight: 0.5 }]
+  keys: [
+    { name: 'address', weight: 0.8 },
+    { name: 'label', weight: 0.5 },
+    { name: 'name', weight: 0.5 }
+  ]
 }
 
 const TOKEN_ADDRESS_TO_LABEL = { ETH: 'ETH' }
@@ -76,13 +80,16 @@ class CurrencyInputPanel extends Component {
   createTokenList = () => {
     const { filteredTokens } = this.props
     let tokens = this.props.tokenAddresses.addresses
-    let tokenList = [{ value: 'ETH', label: 'ETH', address: 'ETH' }]
+    let tokenList = [
+      { value: 'ETH', label: 'ETH', address: 'ETH', name: 'Ether' }
+    ]
 
     for (let i = 0; i < tokens.length; i++) {
       let entry = { value: '', label: '' }
       entry.value = tokens[i][0]
       entry.label = tokens[i][0]
       entry.address = tokens[i][1]
+      entry.name = tokens[i][2]
       tokenList.push(entry)
       TOKEN_ADDRESS_TO_LABEL[tokens[i][1]] = tokens[i][0]
     }
@@ -214,7 +221,7 @@ class CurrencyInputPanel extends Component {
       )
     }
 
-    return results.map(({ label, address }) => {
+    return results.map(({ label, address, name }) => {
       const isSelected = selectedTokens.indexOf(address) > -1
 
       return (
@@ -226,6 +233,7 @@ class CurrencyInputPanel extends Component {
           onClick={() => this.onTokenSelect(address)}
         >
           <TokenLogo className="token-modal__token-logo" address={address} />
+          <div className="token-modal__token-label">{name}</div>
           <div className="token-modal__token-label">{label}</div>
         </div>
       )
