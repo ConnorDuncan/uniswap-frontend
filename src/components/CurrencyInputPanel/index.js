@@ -112,7 +112,7 @@ class CurrencyInputPanel extends Component {
       searchQuery: ''
     })
 
-    if (!fromToken[address]) {
+    if (!fromToken[address] && address !== 'ETH') {
       const label = addresses.find(a => a[1] === address)[0]
       const factory = new web3.eth.Contract(FACTORY_ABI, factoryAddress)
       this.setState({ loadingExchange: true })
