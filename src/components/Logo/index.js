@@ -1,12 +1,11 @@
-import React from 'react'
 import './logo.scss'
+import React from 'react'
+import logo from '../../assets/images/logo.png'
 
-export default function Logo(props) {
-  return (
-    <div className="logo">
-      <span role="img" aria-label="logo">
-        🦄
-      </span>
-    </div>
-  )
-}
+export default () => (
+  <div className="logo">
+    <span aria-label="logo" role="img">
+      <img alt="Uniswap Ninja Logo" src={logo} />
+    </span>
+  </div>
+)
