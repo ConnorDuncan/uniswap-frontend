@@ -1,8 +1,8 @@
-# Uniswap Frontend
+# Uniswap Ninja Frontend
 
 This an an open source interface for Uniswap - a protocol for decentralized exchange of Ethereum tokens.
 
-- Website: [uniswap.io/](https://uniswap.io/)
+- Website: [uniswap.ninja/](https://uniswap.ninja/)
 - Docs: [docs.uniswap.io/](https://docs.uniswap.io/)
 - Twitter: [@UniswapExchange](https://twitter.com/UniswapExchange)
 - Reddit: [/r/Uniswap/](https://www.reddit.com/r/UniSwap/)
