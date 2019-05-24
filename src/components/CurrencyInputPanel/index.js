@@ -90,6 +90,7 @@ class CurrencyInputPanel extends Component {
       entry.label = tokens[i][0]
       entry.address = tokens[i][1]
       entry.name = tokens[i][2]
+      entry.symbolMultihash = tokens[i][3]
       tokenList.push(entry)
       TOKEN_ADDRESS_TO_LABEL[tokens[i][1]] = tokens[i][0]
     }
@@ -221,7 +222,7 @@ class CurrencyInputPanel extends Component {
       )
     }
 
-    return results.map(({ label, address, name }) => {
+    return results.map(({ label, address, name, symbolMultihash }) => {
       const isSelected = selectedTokens.indexOf(address) > -1
 
       return (
@@ -232,7 +233,7 @@ class CurrencyInputPanel extends Component {
           })}
           onClick={() => this.onTokenSelect(address)}
         >
-          <TokenLogo className="token-modal__token-logo" address={address} />
+          <TokenLogo className="token-modal__token-logo" address={address} symbolMultihash={symbolMultihash}/>
           <div className="token-modal__token-label">{name}</div>
           <div className="token-modal__token-label">{label}</div>
         </div>
