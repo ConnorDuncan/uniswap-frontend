@@ -16,8 +16,8 @@ export default async (web3, networkID) => {
   const arbitrableAddressList = new web3.eth.Contract(
     _arbitrableAddressList,
     networkID === 42 || networkID === '42'
-      ? '0xd58bdd286e8155b6223e2a62932ae3e0a9a75759'
-      : '0x916deab80dfbc7030277047cd18b233b3ce5b4ab'
+      ? '0x78895ec026aeff2db73bc30e623c39e1c69b1386'
+      : '0xcb4aae35333193232421e86cd2e9b6c91f3b125f'
   )
 
   const addressesWithBadge = (await arbitrableAddressList.methods
@@ -46,6 +46,7 @@ export default async (web3, networkID) => {
   return Object.keys(tokenData).map(address => [
     tokenData[address][0].ticker,
     address,
-    tokenData[address][0].name
+    tokenData[address][0].name,
+    tokenData[address][0].symbolMultihash,
   ])
 }
