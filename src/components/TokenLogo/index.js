@@ -37,7 +37,7 @@ export default class TokenLogo extends Component {
   }
 
   render() {
-    const { address, size, className } = this.props
+    const { size, className, symbolMultihash, address } = this.props
     // let path = GenericTokenLogo;
     let path = ''
     const mainAddress = KOVAN_TOKEN_MAP[address]
@@ -53,7 +53,7 @@ export default class TokenLogo extends Component {
       !BAD_IMAGES[mainAddress] &&
       mainAddress !== 'ETH'
     ) {
-      path = `${TOKEN_ICON_API}/${mainAddress.toLowerCase()}.png`
+      path = `https://ipfs.kleros.io${symbolMultihash}`
     }
 
     if (!path) {
