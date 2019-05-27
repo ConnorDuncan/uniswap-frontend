@@ -27,7 +27,7 @@ const ADD_EXCHANGE = 'app/addresses/addExchange'
 
 const initialState = KOVAN
 
-export const addExchange = ({ exchangeAddress, label, tokenAddress }) => (
+export const addExchange = ({ exchangeAddress, label, tokenAddress, name, symbolMultihash }) => (
   dispatch,
   getState
 ) => {
@@ -35,13 +35,18 @@ export const addExchange = ({ exchangeAddress, label, tokenAddress }) => (
     addresses: { exchangeAddresses, tokenAddresses }
   } = getState()
 
-  if (exchangeAddresses.fromToken[tokenAddresses]) return
+  if (exchangeAddresses.fromToken[tokenAddresses]) {
+    console.info('returning')
+    return
+  }
 
   dispatch({
     payload: {
       exchangeAddress,
       label,
-      tokenAddress
+      tokenAddress,
+      symbolMultihash,
+      name
     },
     type: ADD_EXCHANGE
   })
@@ -80,9 +85,9 @@ export default (state = initialState, { payload, type }) => {
 }
 
 const handleAddExchange = (state, { payload }) => {
-  const { exchangeAddress, label, tokenAddress } = payload
+  const { exchangeAddress, label, tokenAddress, symbolMultihash, name } = payload
 
-  if (!label || !tokenAddress || !exchangeAddress) return state
+  if (!label || !tokenAddress || !exchangeAddress || !name) return state
 
   return {
     ...state,
@@ -101,7 +106,7 @@ const handleAddExchange = (state, { payload }) => {
       ...state.tokenAddresses,
       addresses: state.tokenAddresses.addresses.some(a => a[1] === tokenAddress)
         ? state.tokenAddresses.addresses
-        : [...state.tokenAddresses.addresses, [label, tokenAddress]]
+        : [...state.tokenAddresses.addresses, [label, tokenAddress, name, symbolMultihash]]
     }
   }
 }

@@ -13,6 +13,7 @@ import { selectors, addPendingTx } from '../../ducks/web3connect'
 import { addApprovalTx } from '../../ducks/pending'
 import { addExchange } from '../../ducks/addresses'
 import { BigNumber as BN } from 'bignumber.js'
+import getT2CRtoken from '../../helpers/get-t2cr-token'
 
 import './currency-panel.scss'
 
@@ -77,7 +78,7 @@ class CurrencyInputPanel extends Component {
     loadingExchange: false
   }
 
-  createTokenList = () => {
+  createTokenList = extraToken => {
     const { filteredTokens } = this.props
     let tokens = this.props.tokenAddresses.addresses
     let tokenList = [
@@ -95,18 +96,29 @@ class CurrencyInputPanel extends Component {
       TOKEN_ADDRESS_TO_LABEL[tokens[i][1]] = tokens[i][0]
     }
 
+    // if(extraToken) {
+    //   tokenList.push({
+    //     value: extraToken[0],
+    //     label: extraToken[0],
+    //     address: extraToken[1],
+    //     name: extraToken[2],
+    //     symbolMultihash: extraToken[3]
+    //   })
+    //   TOKEN_ADDRESS_TO_LABEL[extraToken[1]] = extraToken[0]
+    // }
+
     return tokenList.filter(({ address }) => !filteredTokens.includes(address))
   }
 
-  onTokenSelect = address => {
+  onTokenSelect = async address => {
     const {
       addExchange,
       exchangeAddresses: { fromToken },
       factoryAddress,
       history,
       onCurrencySelected,
-      tokenAddresses: { addresses },
-      web3
+      web3,
+      networkId
     } = this.props
 
     this.setState({
@@ -114,16 +126,20 @@ class CurrencyInputPanel extends Component {
     })
 
     if (!fromToken[address] && address !== 'ETH') {
-      const label = addresses.find(a => a[1] === address)[0]
       const factory = new web3.eth.Contract(FACTORY_ABI, factoryAddress)
       this.setState({ loadingExchange: true })
       factory.methods.getExchange(address).call((err, data) => {
-        if (!err && data !== '0x0000000000000000000000000000000000000000') {
-          addExchange({ exchangeAddress: data, label, tokenAddress: address })
+        if (err || data === '0x0000000000000000000000000000000000000000') {
+          history.push(`/create-exchange/${address}`)
+          this.setState({ isShowingModal: false, loadingExchange: false })
+          return
+        }
+        getT2CRtoken(address, web3,networkId).then(t2crData => {
+          const { ticker, symbolMultihash, name } = t2crData
+          addExchange({ label: ticker, tokenAddress: address, exchangeAddress: data, symbolMultihash, name })
           onCurrencySelected(address)
-        } else history.push(`/create-exchange/${address}`)
-
-        this.setState({ isShowingModal: false, loadingExchange: false })
+          this.setState({ isShowingModal: false, loadingExchange: false })
+        })
       })
     } else {
       onCurrencySelected(address)
@@ -132,8 +148,13 @@ class CurrencyInputPanel extends Component {
   }
 
   renderTokenList() {
-    const tokens = this.createTokenList()
-    const { loadingExchange, searchQuery } = this.state
+    const {
+      loadingExchange,
+      searchQuery,
+      prevQuery,
+      t2crData,
+      missingT2CRData
+    } = this.state
     const {
       t,
       selectedTokens,
@@ -144,33 +165,58 @@ class CurrencyInputPanel extends Component {
       factoryAddress,
       exchangeAddresses: { fromToken },
       addExchange,
-      history
+      history,
+      networkId
     } = this.props
+    const tokens = this.createTokenList(t2crData)
 
-    if (loadingExchange || tokens.length === 1) {
+    if (loadingExchange)
       return (
         <div className="token-modal__token-row token-modal__token-row--searching">
           <div className="loader" />
           <div>Searching Exchanges...</div>
         </div>
       )
-    }
 
-    if (web3 && web3.utils && web3.utils.isAddress(searchQuery)) {
+    if (!loadingExchange && missingT2CRData)
+      return (
+        <a href="https://tokens.kleros.io/tokens" style={{textDecoration: 'none', color: 'white'}}>
+          <div
+            className="token-modal__token-row token-modal__token-row--searching"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'cornflowerblue'
+            }}
+          >
+            <div>Missing Token on T2CR</div>
+            <small>Click to add</small>
+          </div>
+        </a>
+      )
+
+    if (web3 && web3.utils && web3.utils.isAddress(searchQuery) && prevQuery !== searchQuery && !loadingExchange) {
       const tokenAddress = searchQuery
-      const { label } = selectors().getBalance(account, tokenAddress)
       const factory = new web3.eth.Contract(FACTORY_ABI, factoryAddress)
       const exchangeAddress = fromToken[tokenAddress]
 
       if (!exchangeAddress) {
         this.setState({ loadingExchange: true })
         factory.methods.getExchange(tokenAddress).call((err, data) => {
-          if (!err && data !== '0x0000000000000000000000000000000000000000') {
-            addExchange({ label, tokenAddress, exchangeAddress: data })
+          if (err || data === '0x0000000000000000000000000000000000000000') {
+            this.setState({ loadingExchange: false, prevQuery: searchQuery })
+            return
           }
-          this.setState({ loadingExchange: false })
+          getT2CRtoken(tokenAddress, web3,networkId).then(t2crData => {
+            if (t2crData) {
+              const { ticker, symbolMultihash, name } = t2crData
+              addExchange({ label: ticker, tokenAddress, exchangeAddress: data, symbolMultihash, name })
+              this.setState({ loadingExchange: false, prevQuery: searchQuery, t2crData, missingT2CRData: false })
+            } else {
+              this.setState({ loadingExchange: false, prevQuery: searchQuery, missingT2CRData: true })
+            }
+          })
         })
-        return
       }
     }
 
@@ -365,11 +411,18 @@ class CurrencyInputPanel extends Component {
       onValueChange,
       selectedTokenAddress,
       disableTokenSelect,
-      renderInput
+      renderInput,
+      tokenAddresses
     } = this.props
 
     if (typeof renderInput === 'function') {
       return renderInput()
+    }
+
+    let symbolMultihash
+    const matches = tokenAddresses.addresses.filter(t => t[1] === selectedTokenAddress)
+    if (matches.length >= 1) {
+      symbolMultihash = matches[0][3]
     }
 
     return (
@@ -409,6 +462,7 @@ class CurrencyInputPanel extends Component {
             <TokenLogo
               className="currency-input-panel__selected-token-logo"
               address={selectedTokenAddress}
+              symbolMultihash={symbolMultihash}
             />
           ) : null}
           {TOKEN_ADDRESS_TO_LABEL[selectedTokenAddress] || t('selectToken')}
@@ -420,7 +474,6 @@ class CurrencyInputPanel extends Component {
 
   render() {
     const { title, description, extraText, errorMessage } = this.props
-
     return (
       <div className="currency-input-panel">
         <div
@@ -462,7 +515,8 @@ export default withRouter(
       approvals: state.web3connect.approvals,
       transactions: state.web3connect.transactions,
       web3: state.web3connect.web3,
-      pendingApprovals: state.pending.approvals
+      pendingApprovals: state.pending.approvals,
+      networkId: state.web3connect.networkId
     }),
     dispatch => ({
       selectors: () => dispatch(selectors()),
