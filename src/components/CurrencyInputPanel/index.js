@@ -96,17 +96,6 @@ class CurrencyInputPanel extends Component {
       TOKEN_ADDRESS_TO_LABEL[tokens[i][1]] = tokens[i][0]
     }
 
-    // if(extraToken) {
-    //   tokenList.push({
-    //     value: extraToken[0],
-    //     label: extraToken[0],
-    //     address: extraToken[1],
-    //     name: extraToken[2],
-    //     symbolMultihash: extraToken[3]
-    //   })
-    //   TOKEN_ADDRESS_TO_LABEL[extraToken[1]] = extraToken[0]
-    // }
-
     return tokenList.filter(({ address }) => !filteredTokens.includes(address))
   }
 
