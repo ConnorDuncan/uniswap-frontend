@@ -5,6 +5,7 @@ import { Check } from 'react-feather'
 import { Spinner } from '../../theme'
 import Circle from '../../assets/images/circle.svg'
 import { theme } from '../../theme'
+import { useDarkModeManager } from '../../contexts/LocalStorage';
 
 const TitleText = styled.h4`
   margin: 0;
@@ -34,16 +35,20 @@ export const TYPE = {
   PENDING: 1
 }
 
-export default ({ title, msg, type = TYPE.PENDING }) => (
-  <ColumnDiv>
-    {type === TYPE.SUCCESS ? (
-      <StyledCheck size="16" color={theme.royalBlue} />
-    ) : (
-      <SpinnerWrapper src={Circle} alt="loader" />
-    )}
-    <div>
-      <TitleText>{title}</TitleText>
-      <DescriptionText style={{}}>{msg}</DescriptionText>
-    </div>
-  </ColumnDiv>
-)
+export default ({ title, msg, type = TYPE.PENDING }) => {
+  const [darkMode] = useDarkModeManager()
+
+  return (
+    <ColumnDiv>
+      {type === TYPE.SUCCESS ? (
+        <StyledCheck size="16" color={theme(darkMode).royalBlue} />
+      ) : (
+        <SpinnerWrapper src={Circle} alt="loader" />
+      )}
+      <div>
+        <TitleText>{title}</TitleText>
+        <DescriptionText style={{}}>{msg}</DescriptionText>
+      </div>
+    </ColumnDiv>
+  )
+}

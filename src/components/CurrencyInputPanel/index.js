@@ -2,30 +2,35 @@ import React, { useState, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ethers } from 'ethers'
+import { BigNumber } from '@uniswap/sdk'
 import styled from 'styled-components'
 import escapeStringRegex from 'escape-string-regexp'
-import { lighten, darken } from 'polished'
+import { darken } from 'polished'
 import Tooltip from '@reach/tooltip'
 import '@reach/tooltip/styles.css'
 import { isMobile } from 'react-device-detect'
 
 import { BorderlessInput } from '../../theme'
 import { useTokenContract } from '../../hooks'
-import { isAddress, calculateGasMargin } from '../../utils'
+import { isAddress, calculateGasMargin, formatToUsd, formatTokenBalance, formatEthBalance } from '../../utils'
 import { ReactComponent as DropDown } from '../../assets/images/dropdown.svg'
-import { Spinner } from '../../theme'
-import Circle from '../../assets/images/circle.svg'
 import Modal from '../Modal'
 import TokenLogo from '../TokenLogo'
 import SearchIcon from '../../assets/images/magnifying-glass.svg'
 import { useTransactionAdder, usePendingApproval } from '../../contexts/Transactions'
 import { useTokenDetails, useAllTokenDetails, useFetchingTokens } from '../../contexts/Tokens'
+import { ReactComponent as Close } from '../../assets/images/x.svg'
+import { transparentize } from 'polished'
+import { Spinner } from '../../theme'
+import Circle from '../../assets/images/circle-grey.svg'
+import { useUSDPrice } from '../../contexts/Application'
 
 const GAS_MARGIN = ethers.utils.bigNumberify(1000)
 
 const SubCurrencySelect = styled.button`
   ${({ theme }) => theme.flexRowNoWrap}
   background: ${({ theme }) => theme.zumthorBlue};
+
   border: 1px solid ${({ theme }) => theme.royalBlue};
   color: ${({ theme }) => theme.royalBlue};
   line-height: 0;
@@ -41,23 +46,28 @@ const SubCurrencySelect = styled.button`
 const InputRow = styled.div`
   ${({ theme }) => theme.flexRowNoWrap}
   align-items: center;
+
   padding: 0.25rem 0.85rem 0.75rem;
 `
 
 const Input = styled(BorderlessInput)`
   font-size: 1.5rem;
   color: ${({ error, theme }) => error && theme.salmonRed};
+  background-color: ${({ theme }) => theme.inputBackground};
 `
 
 const StyledBorderlessInput = styled(BorderlessInput)`
-  min-height: 1.75rem;
+  min-height: 2.5rem;
   flex-shrink: 0;
+  text-align: left;
+  padding-left: 1.6rem;
+  background-color: ${({ theme }) => theme.concreteGray};
 `
 
 const CurrencySelect = styled.button`
   align-items: center;
   font-size: 1rem;
-  color: ${({ selected, theme }) => (selected ? theme.black : theme.royalBlue)};
+  color: ${({ selected, theme }) => (selected ? theme.textColor : theme.royalBlue)};
   height: 2rem;
   border: 1px solid ${({ selected, theme }) => (selected ? theme.mercuryGray : theme.royalBlue)};
   border-radius: 2.5rem;
@@ -72,7 +82,7 @@ const CurrencySelect = styled.button`
   }
 
   :focus {
-    box-shadow: 0 0 0.5px 0.5px ${({ theme }) => theme.malibuBlue};
+    border: 1px solid ${({ theme }) => darken(0.1, theme.royalBlue)};
   }
 
   :active {
@@ -91,27 +101,26 @@ const StyledDropDown = styled(DropDown)`
   height: 35%;
 
   path {
-    stroke: ${({ selected, theme }) => (selected ? theme.black : theme.royalBlue)};
+    stroke: ${({ selected, theme }) => (selected ? theme.textColor : theme.royalBlue)};
   }
 `
 
 const InputPanel = styled.div`
   ${({ theme }) => theme.flexColumnNoWrap}
-  box-shadow: 0 4px 8px 0 ${({ theme }) => lighten(0.9, theme.royalBlue)};
+  box-shadow: 0 4px 8px 0 ${({ theme }) => transparentize(0.95, theme.shadowColor)};
   position: relative;
   border-radius: 1.25rem;
-  background-color: ${({ theme }) => theme.white};
+  background-color: ${({ theme }) => theme.inputBackground};
   z-index: 1;
 `
 
 const Container = styled.div`
   border-radius: 1.25rem;
-  box-shadow: 0 0 0 0.5px ${({ error, theme }) => (error ? theme.salmonRed : theme.mercuryGray)};
-  background-color: ${({ theme }) => theme.white};
-  transition: box-shadow 200ms ease-in-out;
+  border: 1px solid ${({ error, theme }) => (error ? theme.salmonRed : theme.mercuryGray)};
 
+  background-color: ${({ theme }) => theme.inputBackground};
   :focus-within {
-    box-shadow: 0 0 0.5px 0.5px ${({ theme }) => theme.malibuBlue};
+    border: 1px solid ${({ theme }) => theme.malibuBlue};
   }
 `
 
@@ -146,14 +155,39 @@ const ErrorSpan = styled.span`
 
 const TokenModal = styled.div`
   ${({ theme }) => theme.flexColumnNoWrap}
-  background-color: ${({ theme }) => theme.white};
   width: 100%;
+`
+
+const ModalHeader = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 0px 0px 1rem;
+  height: 60px;
+`
+
+const CloseColor = styled(Close)`
+  path {
+    stroke: ${({ theme }) => theme.textColor};
+  }
+`
+
+const CloseIcon = styled.div`
+  position: absolute;
+  right: 1rem;
+  top: 14px;
+  &:hover {
+    cursor: pointer;
+    opacity: 0.6;
+  }
 `
 
 const SearchContainer = styled.div`
   ${({ theme }) => theme.flexRowNoWrap}
-  padding: 1rem;
-  border-bottom: 1px solid ${({ theme }) => theme.mercuryGray};
+  justify-content: flex-start;
+  padding: 0.5rem 1.5rem;
+  background-color: ${({ theme }) => theme.concreteGray};
 `
 
 const TokenModalInfo = styled.div`
@@ -175,10 +209,9 @@ const TokenList = styled.div`
 const TokenModalRow = styled.div`
   ${({ theme }) => theme.flexRowNoWrap}
   align-items: center;
-  padding: 1rem 1.5rem;
-  margin: 0.25rem 0.5rem;
   justify-content: space-between;
   cursor: ${({ hidePointer }) => (hidePointer ? 'default' : 'pointer')};
+  padding: 1rem;
   user-select: none;
 
   #symbol {
@@ -186,8 +219,40 @@ const TokenModalRow = styled.div`
   }
 
   :hover {
-    background-color: ${({ theme }) => theme.concreteGray};
+    background-color: ${({ theme }) => theme.tokenRowHover};
   }
+
+  ${({ theme }) => theme.mediaWidth.upToMedium`padding: 0.8rem 1rem;`}
+`
+
+const TokenRowLeft = styled.div`
+  ${({ theme }) => theme.flexRowNoWrap}
+  align-items : center;
+`
+
+const TokenSymbolGroup = styled.div`
+  ${({ theme }) => theme.flexColumnNoWrap};
+  margin-left: 1rem;
+`
+
+const TokenFullName = styled.div`
+  color: ${({ theme }) => theme.chaliceGray};
+`
+
+const TokenRowBalance = styled.div`
+  font-size: 1rem;
+  line-height: 20px;
+`
+
+const TokenRowUsd = styled.div`
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: ${({ theme }) => theme.chaliceGray};
+`
+
+const TokenRowRight = styled.div`
+  ${({ theme }) => theme.flexColumnNoWrap};
+  align-items: flex-end;
 `
 
 const TokenModalRowWarning = styled.div`
@@ -218,10 +283,13 @@ const StyledTokenName = styled.span`
 
 const SpinnerWrapper = styled(Spinner)`
   margin: 0 0.25rem 0 0.25rem;
+  color: ${({ theme }) => theme.chaliceGray};
+  opacity: 0.6;
 `
 
 export default function CurrencyInputPanel({
   onValueChange = () => {},
+  allBalances,
   renderInput,
   onCurrencySelected = () => {},
   title,
@@ -262,7 +330,6 @@ export default function CurrencyInputPanel({
                 selectedTokenExchangeAddress,
                 ethers.constants.MaxUint256
               )
-
               tokenContract
                 .approve(selectedTokenExchangeAddress, ethers.constants.MaxUint256, {
                   gasLimit: calculateGasMargin(estimatedGas, GAS_MARGIN)
@@ -368,23 +435,53 @@ export default function CurrencyInputPanel({
       {!disableTokenSelect && (
         <CurrencySelectModal
           isOpen={modalIsOpen}
+          // isOpen={true}
           onDismiss={() => {
             setModalIsOpen(false)
           }}
           onTokenSelect={onCurrencySelected}
+          allBalances={allBalances}
         />
       )}
     </InputPanel>
   )
 }
 
-function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
+function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect, allBalances }) {
   const { t } = useTranslation()
 
   const [searchQuery, setSearchQuery] = useState('')
   const { exchangeAddress } = useTokenDetails(searchQuery)
 
   const allTokens = useAllTokenDetails()
+
+  // BigNumber.js instance
+  const ethPrice = useUSDPrice()
+
+  const _usdAmounts = Object.keys(allTokens).map(k => {
+    if (
+      ethPrice &&
+      allBalances &&
+      allBalances[k] &&
+      allBalances[k].ethRate &&
+      !allBalances[k].ethRate.isNaN() &&
+      allBalances[k].balance
+    ) {
+      const USDRate = ethPrice.times(allBalances[k].ethRate)
+      const balanceBigNumber = new BigNumber(allBalances[k].balance.toString())
+      const usdBalance = balanceBigNumber.times(USDRate).div(new BigNumber(10).pow(allTokens[k].decimals))
+      return usdBalance
+    } else {
+      return null
+    }
+  })
+  const usdAmounts =
+    _usdAmounts &&
+    Object.keys(allTokens).reduce(
+      (accumulator, currentValue, i) => Object.assign({ [currentValue]: _usdAmounts[i] }, accumulator),
+      {}
+    )
+
   const tokenList = useMemo(() => {
     return Object.keys(allTokens)
       .map(key => ({
@@ -396,26 +493,54 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
         const bSymbol = b.symbol.toLowerCase()
         if (aSymbol === 'ETH'.toLowerCase() || bSymbol === 'ETH'.toLowerCase()) {
           return aSymbol === bSymbol ? 0 : aSymbol === 'ETH'.toLowerCase() ? -1 : 1
-        } else {
-          return aSymbol < bSymbol ? -1 : aSymbol > bSymbol ? 1 : 0
+        }
+
+        if (usdAmounts[a] && !usdAmounts[b]) {
+          return -1
+        } else if (usdAmounts[b] && !usdAmounts[a]) {
+          return 1
+        }
+
+        // check for balance - sort by value
+        if (usdAmounts[a] && usdAmounts[b]) {
+          const aUSD = usdAmounts[a]
+          const bUSD = usdAmounts[b]
+
+          return aUSD.gt(bUSD) ? -1 : aUSD.lt(bUSD) ? 1 : 0
+        }
+
+        return aSymbol < bSymbol ? -1 : aSymbol > bSymbol ? 1 : 0
+      })
+      .map(k => {
+        let balance
+        let usdBalance
+        // only update if we have data
+        if (k === 'ETH' && allBalances && allBalances[k]) {
+          balance = formatEthBalance(allBalances[k].balance)
+          usdBalance = usdAmounts[k]
+        } else if (allBalances && allBalances[k]) {
+          balance = formatTokenBalance(allBalances[k].balance, allTokens[k].decimals)
+          usdBalance = usdAmounts[k]
+        }
+        return {
+          name: allTokens[k].name,
+          symbol: allTokens[k].symbol,
+          address: k,
+          balance: balance,
+          usdBalance: usdBalance,
+          symbolMultihash: allTokens[k].symbolMultihash,
+          missingERC20Badge: allTokens[k].missingERC20Badge,
+          exchangeAddress: allTokens[k].exchangeAddress
         }
       })
-      .map(token => ({
-        name: token.name,
-        symbol: token.symbol,
-        address: token.address,
-        symbolMultihash: token.symbolMultihash,
-        missingERC20Badge: token.missingERC20Badge,
-        exchangeAddress: token.exchangeAddress
-      }))
-  }, [allTokens])
+  }, [allBalances, allTokens, usdAmounts])
+
   const filteredTokenList = useMemo(() => {
     return tokenList.filter(tokenEntry => {
       // check the regex for each field
       const regexMatches = Object.keys(tokenEntry).map(tokenEntryKey => {
         return (
-          tokenEntry[tokenEntryKey] &&
-          typeof tokenEntry[tokenEntryKey] !== 'boolean' &&
+          typeof tokenEntry[tokenEntryKey] === 'string' &&
           !!tokenEntry[tokenEntryKey].match(new RegExp(escapeStringRegex(searchQuery), 'i'))
         )
       })
@@ -436,7 +561,6 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
     if (isAddress(searchQuery) && exchangeAddress === undefined) {
       return <TokenModalInfo>Searching for Exchange...</TokenModalInfo>
     }
-
     if (isAddress(searchQuery) && exchangeAddress === ethers.constants.AddressZero) {
       return (
         <>
@@ -459,7 +583,17 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
       return <TokenModalInfo>{t('noExchange')}</TokenModalInfo>
     }
 
-    return filteredTokenList.map(({ address, symbol, name, symbolMultihash, missingERC20Badge, exchangeAddress, missingDecimals }) => {
+    return filteredTokenList.map(({
+      address,
+      symbol,
+      name,
+      symbolMultihash,
+      missingERC20Badge,
+      exchangeAddress,
+      missingDecimals,
+      balance,
+      usdBalance
+    }) => {
       return (
         <div key={address}>
           <TokenModalRow
@@ -469,9 +603,23 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
             }}
             hidePointer={exchangeAddress === ethers.constants.AddressZero}
           >
-            <TokenLogo address={address} symbolMultihash={symbolMultihash} />
-            <span id="name">{name || address}</span>
-            <span id="symbol">{symbol || ''}</span>
+            <TokenRowLeft>
+              <TokenLogo address={address} symbolMultihash={symbolMultihash} />
+              <TokenSymbolGroup>
+                <span id="name">{name || address}</span>
+                <span id="symbol">{symbol || ''}</span>
+              </TokenSymbolGroup>
+            </TokenRowLeft>
+            <TokenRowRight>
+              {balance ? (
+                <TokenRowBalance>{balance && (balance > 0 || balance === '<0.0001') ? balance : '-'}</TokenRowBalance>
+              ) : (
+                <SpinnerWrapper src={Circle} alt="loader" />
+              )}
+              <TokenRowUsd>
+                {usdBalance ? (usdBalance.lt(0.01) ? '<$0.01' : '$' + formatToUsd(usdBalance)) : ''}
+              </TokenRowUsd>
+            </TokenRowRight>
           </TokenModalRow>
           {exchangeAddress === ethers.constants.AddressZero && (
             <TokenModalRowWarning>
@@ -503,12 +651,33 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
     setSearchQuery(checksummedInput || input)
   }
 
+  function clearInputAndDismiss() {
+    setSearchQuery('')
+    onDismiss()
+  }
+
   return (
-    <Modal isOpen={isOpen} onDismiss={onDismiss} minHeight={50} initialFocusRef={isMobile ? undefined : inputRef}>
+    <Modal
+      isOpen={isOpen}
+      onDismiss={clearInputAndDismiss}
+      minHeight={60}
+      initialFocusRef={isMobile ? undefined : inputRef}
+    >
       <TokenModal>
+        <ModalHeader>
+          <p>Select Token</p>
+          <CloseIcon onClick={clearInputAndDismiss}>
+            <CloseColor alt={'close icon'} />
+          </CloseIcon>
+        </ModalHeader>
         <SearchContainer>
-          <StyledBorderlessInput ref={inputRef} type="text" placeholder={t('searchOrPaste')} onChange={onInput} />
           <img src={SearchIcon} alt="search" />
+          <StyledBorderlessInput
+            ref={inputRef}
+            type="text"
+            placeholder={isMobile ? t('searchOrPasteMobile') : t('searchOrPaste')}
+            onChange={onInput}
+          />
         </SearchContainer>
         <TokenList>{renderTokenList(isFetching)}</TokenList>
       </TokenModal>

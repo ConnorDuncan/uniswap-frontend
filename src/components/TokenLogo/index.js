@@ -8,13 +8,14 @@ const BAD_IMAGES = {}
 const Image = styled.img`
   width: ${({ size }) => size};
   height: ${({ size }) => size};
+  background-color: white;
   border-radius: 1rem;
   object-fit: contain;
 `
 
 const Emoji = styled.span`
   width: ${({ size }) => size};
-  font-size: ${({ size }) => size};
+  height: ${({ size }) => size};
 `
 
 const StyledEthereumLogo = styled(EthereumLogo)`
@@ -31,7 +32,7 @@ export default function TokenLogo({ address, size = '1rem', symbolMultihash, ...
     path = `${process.env.REACT_APP_IPFS_GATEWAY}/${symbolMultihash}`
   } else {
     return (
-      <Emoji {...rest}>
+      <Emoji {...rest} size={size}>
         <span role="img" aria-label="Thinking">
           🤔
         </span>
