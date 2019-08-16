@@ -27,7 +27,7 @@ const Nod = styled.span`
   transition: transform 150ms ease-out;
 
   :hover {
-    transform: rotate(-10deg);
+    transform: rotate(10deg);
   }
 `
 
@@ -82,13 +82,8 @@ export default function Header() {
     <HeaderFrame>
       <HeaderElement>
         <Title>
-          <Logo alt="Uniswap Ninja Logo" src={logo} />
           <Nod>
-            <Link id="link" href="https://uniswap.io">
-              <span role="img" aria-label="unicorn">
-                🦄{'  '}
-              </span>
-            </Link>
+            <Logo alt="Uniswap Ninja Logo" src={logo} />
           </Nod>
           <Link id="link" href="https://uniswap.io">
             <h1 id="title">Uniswap.Ninja</h1>
