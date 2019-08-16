@@ -235,10 +235,6 @@ const TokenSymbolGroup = styled.div`
   margin-left: 1rem;
 `
 
-const TokenFullName = styled.div`
-  color: ${({ theme }) => theme.chaliceGray};
-`
-
 const TokenRowBalance = styled.div`
   font-size: 1rem;
   line-height: 20px;
@@ -511,26 +507,26 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect, allBalances }) 
 
         return aSymbol < bSymbol ? -1 : aSymbol > bSymbol ? 1 : 0
       })
-      .map(k => {
+      .map(token => {
         let balance
         let usdBalance
         // only update if we have data
-        if (k === 'ETH' && allBalances && allBalances[k]) {
-          balance = formatEthBalance(allBalances[k].balance)
-          usdBalance = usdAmounts[k]
-        } else if (allBalances && allBalances[k]) {
-          balance = formatTokenBalance(allBalances[k].balance, allTokens[k].decimals)
-          usdBalance = usdAmounts[k]
+        if (token.address === 'ETH' && allBalances && allBalances[token.address]) {
+          balance = formatEthBalance(allBalances[token.address].balance)
+          usdBalance = usdAmounts[token.address]
+        } else if (allBalances && allBalances[token.address]) {
+          balance = formatTokenBalance(allBalances[token.address].balance, allTokens[token.address].decimals)
+          usdBalance = usdAmounts[token.address]
         }
         return {
-          name: allTokens[k].name,
-          symbol: allTokens[k].symbol,
-          address: k,
+          name: token.name,
+          symbol: token.symbol,
+          address: token.address,
           balance: balance,
           usdBalance: usdBalance,
-          symbolMultihash: allTokens[k].symbolMultihash,
-          missingERC20Badge: allTokens[k].missingERC20Badge,
-          exchangeAddress: allTokens[k].exchangeAddress
+          symbolMultihash: token.symbolMultihash,
+          missingERC20Badge: token.missingERC20Badge,
+          exchangeAddress: token.exchangeAddress
         }
       })
   }, [allBalances, allTokens, usdAmounts])

@@ -67,7 +67,7 @@ const ExtraLink = styled.h1`
   display: inline;
   font-size: 1rem;
   font-weight: 500;
-  color: ${({ theme }) => theme.klerosPurple};
+  color: ${({ theme }) => theme.UniswapPink};
   margin: 0 10px;
   @media only screen and (max-width: 450px) {
     font-size: 0.8rem;
