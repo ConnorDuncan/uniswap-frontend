@@ -9,7 +9,7 @@
 An open source interface for Uniswap -- a protocol for decentralized exchange of Ethereum tokens.
 
 - Website: [uniswap.org](https://uniswap.org/)
-- Interface: [app.uniswap.org](https://app.uniswap.org)
+- Interface: [uniswap.ninja](https://uniswap.ninja)
 - Docs: [uniswap.org/docs/](https://uniswap.org/docs/)
 - Twitter: [@Uniswap](https://twitter.com/Uniswap)
 - Reddit: [/r/Uniswap](https://www.reddit.com/r/Uniswap/)
@@ -35,10 +35,10 @@ For steps on local deployment, development, and code contribution, please see [C
 The Uniswap Interface supports swapping, adding liquidity, removing liquidity and migrating liquidity for 
 Uniswap protocol V2.
 
-- Swap on Uniswap V2: https://app.uniswap.org/#/swap?use=v2
-- View V2 liquidity: https://app.uniswap.org/#/pool/v2
-- Add V2 liquidity: https://app.uniswap.org/#/add/v2
-- Migrate V2 liquidity to V3: https://app.uniswap.org/#/migrate/v2
+- Swap on Uniswap V2: https://uniswap.ninja/#/swap?use=V2
+- View V2 liquidity: https://uniswap.ninja/#/pool/v2
+- Add V2 liquidity: https://uniswap.ninja/#/add/v2
+- Migrate V2 liquidity to V3: https://uniswap.ninja/#/migrate/v2
 
 ## Accessing Uniswap V1
  
